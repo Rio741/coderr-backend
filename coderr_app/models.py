@@ -1,11 +1,11 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.conf import settings
+
 
 
 class Offer(models.Model):
-    user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="offers"
-    )
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     image = models.ImageField(upload_to='offers/', null=True, blank=True)
     description = models.TextField()

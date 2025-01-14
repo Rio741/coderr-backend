@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'rest_framework.authtoken',
-    'django_filters'
+    'django_filters',
+    'user_auth_app'
 ]
 
 MIDDLEWARE = [
@@ -59,6 +60,9 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:5500",
 ]
+
+AUTH_USER_MODEL = 'user_auth_app.User'
+
 
 
 ROOT_URLCONF = 'coderr.urls'
