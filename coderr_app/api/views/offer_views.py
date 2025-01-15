@@ -1,23 +1,31 @@
 from rest_framework import viewsets, filters
-from ..models import Offer, OfferDetail
-from .serializers import OfferSerializer, OfferDetailSerializer
-from .filters import OfferFilter
-from django.db import connection
+from ...models import Offer, OfferDetail
+from ..serializers.offer_serializers import OfferSerializer, OfferDetailSerializer
+from ..filters import OfferFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from .filters import OfferFilter
-from .pagination import PageNumberPagination
+from ..pagination import PageNumberPagination
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
+from ..permissions import AuthenticatedOwnerPermission, IsProvider
 
 
 class OfferViewSet(viewsets.ModelViewSet):
     queryset = Offer.objects.prefetch_related('details').select_related('user').distinct()
     serializer_class = OfferSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [AuthenticatedOwnerPermission]
     filter_backends = (DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter)
     filterset_class = OfferFilter
     pagination_class = PageNumberPagination
+
+    def get_permissions(self):
+        if self.action == 'create':
+            self.permission_classes = [IsProvider]
+        elif self.action in ['update', 'partial_update', 'destroy']:
+            self.permission_classes = [AuthenticatedOwnerPermission]
+        else:
+            self.permission_classes = [IsAuthenticatedOrReadOnly]
+        return super().get_permissions()
 
     def perform_create(self, serializer):
         details_data = self.request.data.get('details', [])
@@ -39,10 +47,11 @@ class OfferViewSet(viewsets.ModelViewSet):
 
         offer = serializer.save(user=self.request.user)
         offer_serializer = OfferSerializer(offer)
-        return Response(offer_serializer.data)      
+        return Response(offer_serializer.data)  
 
     
 
 class OfferDetailViewSet(viewsets.ModelViewSet):
     queryset = OfferDetail.objects.all()
     serializer_class = OfferDetailSerializer
+    permission_classes = [AuthenticatedOwnerPermission | IsProvider | IsAuthenticatedOrReadOnly]

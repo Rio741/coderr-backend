@@ -61,10 +61,6 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5500",
 ]
 
-AUTH_USER_MODEL = 'user_auth_app.User'
-
-
-
 ROOT_URLCONF = 'coderr.urls'
 
 TEMPLATES = [

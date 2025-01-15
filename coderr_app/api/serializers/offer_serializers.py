@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from ..models import Offer, OfferDetail
+from ...models import Offer, OfferDetail
 from django.db.models import Min
 from rest_framework.reverse import reverse
 
