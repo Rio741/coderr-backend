@@ -16,27 +16,20 @@ class AuthenticatedOwnerPermission(BasePermission):
 
 class IsProvider(BasePermission):
     """
-    Stellt sicher, dass nur Anbieter Angebote erstellen können.
+    Stellt sicher, dass nur Benutzer mit type='business' Angebote erstellen können.
     """
     def has_permission(self, request, view):
-        # Prüfen, ob der Benutzer authentifiziert ist
         if not request.user.is_authenticated:
             return False
-        
-           # Überprüfen, ob der Benutzer entweder ein Anbieter oder ein Superuser ist
+
         if request.user.is_staff or request.user.is_superuser:
             return True
 
-        
-        # Prüfen, ob der Benutzer ein Anbieter ist (über UserProfile)
         try:
-            user_profile = request.user.userprofile
-            if user_profile.is_provider:
-                return True
+            return request.user.userprofile.type == 'business'
         except ObjectDoesNotExist:
             return False
-        
-        return False
+
     
 
 
@@ -56,3 +49,8 @@ class IsAdminUserOrReadOnly(BasePermission):
     """
     def has_permission(self, request, view):
         return request.method in SAFE_METHODS or request.user.is_staff
+
+
+class IsOwnerOrAdmin(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return obj.reviewer == request.user or request.user.is_staff

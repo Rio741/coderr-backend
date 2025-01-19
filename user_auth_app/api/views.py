@@ -1,10 +1,15 @@
 from rest_framework import status
 from rest_framework.views import APIView
-from .serializers import RegistrationSerializer, LoginSerializer
+from .serializers import RegistrationSerializer, LoginSerializer, CustomerProfileSerializer, UserProfileDetailSerializer,  BusinessProfileSerializer
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from django.contrib.auth import authenticate
 from rest_framework.permissions import AllowAny
+from ..models import UserProfile
+from rest_framework.generics import RetrieveUpdateAPIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.generics import ListAPIView
+from rest_framework.exceptions import NotFound
 
 
 class RegistrationView(APIView):
@@ -43,3 +48,35 @@ class CustomLoginView(APIView):
                 }, status=status.HTTP_200_OK)
             return Response({"error": "Invalid credentials."}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# 🔹 Detailansicht (`/api/profile/<id>/`)
+class UserProfileDetailView(RetrieveUpdateAPIView):
+    queryset = UserProfile.objects.all()
+    serializer_class = UserProfileDetailSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        profile_id = self.kwargs.get('pk')
+
+        # Falls ein Objekt kommt, extrahiere die ID
+        if isinstance(profile_id, dict):
+            profile_id = profile_id.get('pk') or profile_id.get('id')
+
+        if not profile_id:
+            raise NotFound("❌ Fehler: Keine gültige ID gefunden.")
+
+        try:
+            return UserProfile.objects.get(user__id=profile_id)
+        except UserProfile.DoesNotExist:
+            raise NotFound("❌ Fehler: Das angeforderte UserProfile existiert nicht.")
+
+
+# 🔹 Liste aller Kunden (`/api/profiles/customer/`)
+class CustomerProfilesListView(ListAPIView):
+    queryset = UserProfile.objects.filter(type='customer')
+    serializer_class = CustomerProfileSerializer  
+
+# 🔹 Liste aller Business-Profile (`/api/profiles/business/`)
+class BusinessProfilesListView(ListAPIView):
+    queryset = UserProfile.objects.filter(type='business')
+    serializer_class = BusinessProfileSerializer   

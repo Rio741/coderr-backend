@@ -73,3 +73,18 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Order #{self.id} - {self.title}"
+    
+
+class Review(models.Model):
+    business_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="received_reviews")
+    reviewer = models.ForeignKey(User, on_delete=models.CASCADE, related_name="given_reviews")
+    rating = models.IntegerField()
+    description = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('business_user', 'reviewer')  # Ein Benutzer kann pro Geschäftsnutzer nur eine Bewertung abgeben.
+
+    def __str__(self):
+        return f"Review by {self.reviewer.username} for {self.business_user.username} - {self.rating}"
