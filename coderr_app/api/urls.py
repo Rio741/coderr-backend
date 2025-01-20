@@ -6,6 +6,7 @@ from .views.orderCount_views import OrderCountView, CompletedOrderCountView
 from .views.baseInfo_view import BaseInfoView
 from .views.review_views import ReviewViewSet
 
+
 router = DefaultRouter()
 router.register(r'offers', OfferViewSet)
 router.register(r'offerdetails', OfferDetailViewSet)

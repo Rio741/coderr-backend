@@ -40,8 +40,6 @@ class OfferDetail(models.Model):
         return f"{self.offer.title} - {self.offer_type}"
 
 
-
-
 class Order(models.Model):
     IN_PROGRESS = 'in_progress'
     COMPLETED = 'completed'
@@ -84,7 +82,7 @@ class Review(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ('business_user', 'reviewer')  # Ein Benutzer kann pro Geschäftsnutzer nur eine Bewertung abgeben.
+        unique_together = ('business_user', 'reviewer')
 
     def __str__(self):
         return f"Review by {self.reviewer.username} for {self.business_user.username} - {self.rating}"
