@@ -33,8 +33,7 @@ class OrderSerializer(serializers.ModelSerializer):
 
         business_user = offer_detail.offer.user
         print(f"✅ OfferDetail ID: {offer_detail_id}")
-        print(f"🔍 Offer User ID: {
-              business_user.id if business_user else 'None'}")
+        print(f"🔍 Offer User ID: {business_user.id if business_user else 'None'}")
 
         if not business_user:
             raise ValidationError(

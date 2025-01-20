@@ -13,11 +13,6 @@ db.sqlite3  # Falls du SQLite nutzt
 *.sqlite3
 *.log  # Falls du Log-Dateien generierst
 
-# 🔹 Medien- & statische Dateien
-/media/
-staticfiles/
-static/
-
 # 🔹 Umgebungsvariablen (Geheime Schlüssel, API-Keys)
 .env
 .env.local
