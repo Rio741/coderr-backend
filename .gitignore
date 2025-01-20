@@ -1,105 +1,24 @@
-# Python #
-##########
+# 🔹 Virtuelle Umgebung (Python venv)
+env/
+venv/
+
+# 🔹 Python-Caches & Bytecode
+__pycache__/
 *.pyc
 *.pyo
 *.pyd
-__pycache__/
-*.env
-*.venv
-venv/
-ENV/
-env/
-.venv/
-.pytest_cache/
-*.log
 
-# Django #
-##########
-*.db
-db.sqlite3
-db.sqlite3-journal
-*.pot
-*.pyc
-*.pyo
-migrations/
-*.swp
-*.swo
-*.~*
-*.retry
-local_settings.py
-*.py[cod]
+# 🔹 Django-Konfigurationsdateien
+db.sqlite3  # Falls du SQLite nutzt
+*.sqlite3
+*.log  # Falls du Log-Dateien generierst
 
-# Media #
-#########
-media/
-*.png
-*.jpg
-*.jpeg
-*.gif
-*.svg
-*.bmp
-*.ico
-*.webp
-
-# Static #
-##########
+# 🔹 Medien- & statische Dateien
+/media/
 staticfiles/
 static/
-static_cdn/
-*.gz
 
-# IDEs and Editors #
-#####################
-.vscode/
-.idea/
-*.sublime-project
-*.sublime-workspace
-
-# System Files #
-################
-.DS_Store
-Thumbs.db
-
-# Virtual Environment #
-########################
-.Python
-*.env
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Testing #
-###########
-coverage.xml
-htmlcov/
-.tox/
-.nox/
-.cache/
-.pytest_cache/
-nosetests.xml
-coverage/
-*.cover
-*.log
-.coverage
-*.cover
-*.py,cover
-.hypothesis/
-pytestdebug.log
-junit-xml/
-
-# Mac #
-#######
-._*
-
-# Windows #
-###########
-*.bak
-*.swp
-*.dir
-*.tmp
-
-# Deployment #
-##############
-*.pem
-*.crt
-*.key
-*.cfg
+# 🔹 Umgebungsvariablen (Geheime Schlüssel, API-Keys)
+.env
+.env.local
+.env.*.local
