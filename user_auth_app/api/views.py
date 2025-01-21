@@ -10,6 +10,7 @@ from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.generics import ListAPIView
 from rest_framework.exceptions import NotFound
+from django.db import transaction
 
 
 class RegistrationView(APIView):
@@ -18,14 +19,21 @@ class RegistrationView(APIView):
     def post(self, request):
         serializer = RegistrationSerializer(data=request.data)
         if serializer.is_valid():
-            user = serializer.save()
-            token, _ = Token.objects.get_or_create(user=user)
-            return Response({
-                "token": token.key,
-                "username": user.username,
-                "email": user.email,
-                "user_id": user.id
-            }, status=status.HTTP_201_CREATED)
+            try:
+                with transaction.atomic():
+                    user = serializer.save()
+                    token, _ = Token.objects.get_or_create(user=user)
+                    return Response({
+                        "token": token.key,
+                        "username": user.username,
+                        "email": user.email,
+                        "user_id": user.id
+                    }, status=status.HTTP_201_CREATED)
+            except Exception as e:
+                return Response(
+                    {"detail": ["Interner Serverfehler. Bitte versuchen Sie es später erneut."]},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -46,7 +54,7 @@ class CustomLoginView(APIView):
                     "email": user.email,
                     "user_id": user.id
                 }, status=status.HTTP_200_OK)
-            return Response({"error": "Invalid credentials."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": ["Falsche Anmeldedaten."]}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

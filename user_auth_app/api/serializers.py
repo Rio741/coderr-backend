@@ -3,6 +3,8 @@ from rest_framework import serializers
 from ..models import UserProfile
 from rest_framework import serializers
 from django.conf import settings
+from rest_framework.exceptions import PermissionDenied
+import re
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
@@ -17,18 +19,33 @@ class RegistrationSerializer(serializers.ModelSerializer):
         }
 
     def validate(self, data):
+        errors = {}
+
+        # Prüfe, ob Passwörter übereinstimmen
         if data['password'] != data['repeated_password']:
-            raise serializers.ValidationError({"password": "Passwords do not match."})
+            errors['password'] = ["Das Passwort ist nicht gleich mit dem wiederholten Passwort."]
+
+        # Prüfe, ob Benutzername bereits existiert
+        if User.objects.filter(username=data['username']).exists():
+            errors['username'] = ["Dieser Benutzername ist bereits vergeben."]
+
+        # Prüfe, ob E-Mail bereits existiert
+        if User.objects.filter(email=data['email']).exists():
+            errors['email'] = ["Diese E-Mail-Adresse wird bereits verwendet."]
+
+        if errors:
+            raise serializers.ValidationError(errors)
+
         return data
 
     def create(self, validated_data):
-        validated_data.pop('repeated_password')
+        validated_data.pop('repeated_password')  # Entferne `repeated_password`, da es nicht im User-Modell ist
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data['email'],
             password=validated_data['password']
         )
-        user_profile = UserProfile.objects.create(
+        UserProfile.objects.create(
             user=user,
             type=validated_data['type']
         )
@@ -38,6 +55,19 @@ class RegistrationSerializer(serializers.ModelSerializer):
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        errors = {}
+
+        if not data.get('username'):
+            errors['username'] = ["Benutzername ist erforderlich."]
+        if not data.get('password'):
+            errors['password'] = ["Passwort ist erforderlich."]
+
+        if errors:
+            raise serializers.ValidationError(errors)
+
+        return data
 
 
 class UserProfileDetailSerializer(serializers.ModelSerializer):
@@ -69,9 +99,15 @@ class UserProfileDetailSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         request = self.context.get("request")
 
+        # ✅ Überprüfe, ob der angemeldete Benutzer das eigene Profil bearbeitet
+        if request.user != instance.user:
+            raise PermissionDenied("Sie dürfen nur Ihr eigenes Profil bearbeiten.")  # 403 Forbidden
+
+        # ✅ Falls Datei hochgeladen wird, setze sie
         if "file" in request.FILES:
             instance.file = request.FILES["file"]
 
+        # ✅ Aktualisiere alle anderen Felder
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
 
@@ -103,6 +139,7 @@ class CustomerProfileSerializer(serializers.ModelSerializer):
 
 class BusinessProfileSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
+    tel = serializers.CharField()
 
     class Meta:
         model = UserProfile
@@ -118,3 +155,8 @@ class BusinessProfileSerializer(serializers.ModelSerializer):
             "first_name": obj.first_name if obj.first_name else obj.user.first_name,
             "last_name": obj.last_name if obj.last_name else obj.user.last_name
         }
+    
+    def validate_tel(self, value):
+        if not re.match(r"^\+?[0-9]+$", value):
+            raise serializers.ValidationError("Die Telefonnummer muss im Format '+49123456789' oder '0123456789' sein.")
+        return value

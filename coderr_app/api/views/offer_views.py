@@ -1,6 +1,6 @@
 from rest_framework import viewsets, filters
 from ...models import Offer, OfferDetail
-from ..serializers.offer_serializers import OfferListSerializer, OfferDetailViewSerializer, OfferDetailSerializer
+from ..serializers.offer_serializers import OfferListSerializer, OfferDetailViewSerializer, OfferDetailSerializer, OfferCreateSerializer
 from ..filters import OfferFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
@@ -8,6 +8,7 @@ from ..pagination import CustomPagination
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from ..permissions import AuthenticatedOwnerPermission, IsProvider
+from rest_framework import status
 
 
 class OfferViewSet(viewsets.ModelViewSet):
@@ -19,10 +20,12 @@ class OfferViewSet(viewsets.ModelViewSet):
     pagination_class = CustomPagination
 
     def get_serializer_class(self):
-        """Wechselt zwischen `OfferListSerializer` (Liste) und `OfferDetailViewSerializer` (Detail)."""
+        """Wechselt zwischen Serializern basierend auf der Aktion."""
         if self.action == "retrieve":
-            return OfferDetailViewSerializer
-        return OfferListSerializer
+            return OfferDetailViewSerializer  # Vollständige Details bei retrieve
+        elif self.action == "create":
+            return OfferCreateSerializer  # Reduziertes Schema für create
+        return OfferListSerializer  # URL-Details bei list
 
     def get_permissions(self):
         if self.action == "create":
@@ -66,3 +69,12 @@ class OfferDetailViewSet(viewsets.ModelViewSet):
     serializer_class = OfferDetailSerializer
     permission_classes = [AuthenticatedOwnerPermission |
                           IsProvider | IsAuthenticatedOrReadOnly]
+    
+    def retrieve(self, request, *args, **kwargs):
+        """Falls kein OfferDetail existiert, gebe eine leere 200-Response zurück."""
+        try:
+            instance = self.get_object()
+            serializer = self.get_serializer(instance)
+            return Response(serializer.data)
+        except:
+            return Response({}, status=status.HTTP_200_OK)

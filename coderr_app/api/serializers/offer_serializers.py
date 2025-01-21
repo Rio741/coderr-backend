@@ -14,15 +14,16 @@ class OfferDetailSerializer(serializers.ModelSerializer):
 
 
 class OfferListSerializer(serializers.ModelSerializer):
-    details = OfferDetailSerializer(many=True)
+    details = serializers.SerializerMethodField()
     min_price = serializers.SerializerMethodField()
     min_delivery_time = serializers.SerializerMethodField()
     user_details = serializers.SerializerMethodField()
+    user = serializers.PrimaryKeyRelatedField(read_only=True) 
 
     class Meta:
         model = Offer
         fields = [
-            "id", "title", "image", "description", "created_at", "updated_at",
+            "id", "user", "title", "image", "description", "created_at", "updated_at",
             "details", "min_price", "min_delivery_time", "user_details"
         ]
 
@@ -134,6 +135,23 @@ class OfferDetailViewSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         details_data = validated_data.pop('details', [])
+        offer = Offer.objects.create(**validated_data)
+
+        for detail_data in details_data:
+            OfferDetail.objects.create(offer=offer, **detail_data)
+
+        return offer
+
+
+class OfferCreateSerializer(serializers.ModelSerializer):
+    details = OfferDetailSerializer(many=True)
+
+    class Meta:
+        model = Offer
+        fields = ["id", "title", "image", "description", "details"]
+
+    def create(self, validated_data):
+        details_data = validated_data.pop("details")
         offer = Offer.objects.create(**validated_data)
 
         for detail_data in details_data:
