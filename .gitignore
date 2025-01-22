@@ -17,3 +17,6 @@ db.sqlite3  # Falls du SQLite nutzt
 .env
 .env.local
 .env.*.local
+
+
+media/

@@ -12,20 +12,18 @@ from rest_framework import status
 
 
 class OfferViewSet(viewsets.ModelViewSet):
-    queryset = Offer.objects.prefetch_related(
-        "details").select_related("user").distinct()
-    filter_backends = (DjangoFilterBackend,
-                       filters.SearchFilter, filters.OrderingFilter)
+    queryset = Offer.objects.prefetch_related("details").select_related("user").distinct()
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter)
     filterset_class = OfferFilter
     pagination_class = CustomPagination
 
     def get_serializer_class(self):
         """Wechselt zwischen Serializern basierend auf der Aktion."""
-        if self.action == "retrieve":
-            return OfferDetailViewSerializer  # Vollständige Details bei retrieve
+        if self.action in ["retrieve", "update", "partial_update"]:  
+            return OfferDetailViewSerializer
         elif self.action == "create":
-            return OfferCreateSerializer  # Reduziertes Schema für create
-        return OfferListSerializer  # URL-Details bei list
+            return OfferCreateSerializer
+        return OfferListSerializer
 
     def get_permissions(self):
         if self.action == "create":

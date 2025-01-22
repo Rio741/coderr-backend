@@ -141,6 +141,42 @@ class OfferDetailViewSerializer(serializers.ModelSerializer):
             OfferDetail.objects.create(offer=offer, **detail_data)
 
         return offer
+    
+    def update(self, instance, validated_data):
+        """Ermöglicht das Aktualisieren von Offer und OfferDetails."""
+        details_data = validated_data.pop("details", None)  # Extrahiere Details-Daten
+
+        # ✅ Aktualisiere das `Offer`-Hauptobjekt
+        instance.title = validated_data.get("title", instance.title)
+        instance.image = validated_data.get("image", instance.image)
+        instance.description = validated_data.get("description", instance.description)
+        instance.save()
+
+        if details_data is not None:
+            # 🛠 Bestehende OfferDetails abrufen
+            existing_details = {detail.id: detail for detail in instance.details.all()}
+            request_detail_ids = set()
+
+            for detail_data in details_data:
+                detail_id = detail_data.get("id")
+
+                if detail_id and detail_id in existing_details:
+                    # ✅ Bestehendes OfferDetail aktualisieren
+                    detail = existing_details[detail_id]
+                    for attr, value in detail_data.items():
+                        setattr(detail, attr, value)
+                    detail.save()
+                    request_detail_ids.add(detail_id)
+                else:
+                    # ✅ Neues OfferDetail erstellen
+                    new_detail = OfferDetail.objects.create(offer=instance, **detail_data)
+                    request_detail_ids.add(new_detail.id)
+
+            # 🗑️ Lösche OfferDetails, die nicht mehr vorhanden sein sollten
+            details_to_delete = set(existing_details.keys()) - request_detail_ids
+            OfferDetail.objects.filter(id__in=details_to_delete).delete()
+
+        return instance
 
 
 class OfferCreateSerializer(serializers.ModelSerializer):

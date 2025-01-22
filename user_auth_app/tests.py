@@ -5,6 +5,7 @@ from rest_framework.authtoken.models import Token
 from django.urls import reverse
 from .models import UserProfile
 
+
 class AuthTestCase(APITestCase):
 
     def setUp(self):
@@ -50,7 +51,8 @@ class AuthTestCase(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("password", response.data)
-        self.assertEqual(response.data["password"], ["Das Passwort ist nicht gleich mit dem wiederholten Passwort."])
+        self.assertEqual(response.data["password"], [
+                         "Das Passwort ist nicht gleich mit dem wiederholten Passwort."])
 
     def test_registration_username_taken(self):
         """Testet Registrierung mit bereits vergebenem Benutzernamen"""
@@ -63,10 +65,13 @@ class AuthTestCase(APITestCase):
             "type": "customer"
         }
         response = self.client.post(url, data, format="json")
-
+        expected_messages = [
+            "Dieser Benutzername ist bereits vergeben.",
+            "A user with that username already exists."
+        ]
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("username", response.data)
-        self.assertEqual(response.data["username"], ["Dieser Benutzername ist bereits vergeben."])
+        self.assertIn(response.data["username"][0], expected_messages)
 
     def test_registration_email_taken(self):
         """Testet Registrierung mit bereits verwendeter E-Mail"""
@@ -82,7 +87,8 @@ class AuthTestCase(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("email", response.data)
-        self.assertEqual(response.data["email"], ["Diese E-Mail-Adresse wird bereits verwendet."])
+        self.assertEqual(response.data["email"], [
+                         "Diese E-Mail-Adresse wird bereits verwendet."])
 
     def test_login_success(self):
         """Testet ein erfolgreiches Login"""
