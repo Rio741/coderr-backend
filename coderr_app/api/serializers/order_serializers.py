@@ -4,6 +4,9 @@ from rest_framework.exceptions import ValidationError, PermissionDenied
 
 
 class OrderSerializer(serializers.ModelSerializer):
+    """
+    Serialisiert das Order-Modell für die API.
+    """
     class Meta:
         model = Order
         fields = '__all__'
@@ -13,7 +16,6 @@ class OrderSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         request = self.context['request']
         
-        # ✅ Überprüfe, ob der Benutzer authentifiziert ist (403 statt 400)
         if not request.user.is_authenticated:
             raise PermissionDenied("Authentifizierung erforderlich, um eine Bestellung zu erstellen.")
 
@@ -31,7 +33,7 @@ class OrderSerializer(serializers.ModelSerializer):
 
         user_profile = getattr(customer_user, 'userprofile', None)
         if not user_profile or user_profile.type != 'customer':
-            raise PermissionDenied("Nur Kunden können Bestellungen erstellen.")  # ✅ 403 statt 400
+            raise PermissionDenied("Nur Kunden können Bestellungen erstellen.") 
 
         business_user = offer_detail.offer.user
         print(f"✅ OfferDetail ID: {offer_detail_id}")

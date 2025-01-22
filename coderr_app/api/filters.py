@@ -2,8 +2,14 @@ import django_filters
 from ..models import Offer
 from django.db.models import Q
 
-
 class OfferFilter(django_filters.FilterSet):
+    """
+    Filterklasse für Angebote.
+    
+    - Ermöglicht das Filtern nach Ersteller-ID, Mindestpreis und maximaler Lieferzeit.
+    - Bietet eine Suchfunktion für Titel und Beschreibung.
+    - Unterstützt Sortierung nach Aktualisierungsdatum und Preis.
+    """
     creator_id = django_filters.NumberFilter(
         field_name='user__id', label='Creator ID')
     min_price = django_filters.NumberFilter(
@@ -24,6 +30,7 @@ class OfferFilter(django_filters.FilterSet):
         fields = ['creator_id', 'min_price', 'max_delivery_time']
 
     def filter_search(self, queryset, name, value):
+        """Filtert Angebote basierend auf einer Suchanfrage in Titel oder Beschreibung."""
         return queryset.filter(
             Q(title__icontains=value) | Q(description__icontains=value)
         )

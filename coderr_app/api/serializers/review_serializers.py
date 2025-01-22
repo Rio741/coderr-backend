@@ -3,6 +3,13 @@ from ...models import Review
 
 
 class ReviewSerializer(serializers.ModelSerializer):
+    """
+    Serialisiert das Review-Modell für die API.
+    
+    - Enthält Felder für Bewertung, Beschreibung und Benutzerzuordnung.
+    - Stellt sicher, dass nur Geschäftsbenutzer bewertet werden können.
+    - Validiert, dass die Bewertung zwischen 1 und 5 liegt.
+    """
     class Meta:
         model = Review
         fields = ['id', 'business_user', 'reviewer', 'rating',
@@ -11,6 +18,12 @@ class ReviewSerializer(serializers.ModelSerializer):
                             'reviewer', 'created_at', 'updated_at']
 
     def validate(self, data):
+        """
+        Führt benutzerdefinierte Validierungen durch:
+        
+        - Stellt sicher, dass `business_user` ein Geschäftsbenutzer ist.
+        - Überprüft, dass das `rating` zwischen 1 und 5 liegt.
+        """
         if 'business_user' in data and data['business_user'].userprofile.type != 'business':
             raise serializers.ValidationError(
                 "Reviews can only be given to business users.")

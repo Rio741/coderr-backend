@@ -10,15 +10,22 @@ from rest_framework.response import Response
 from ..permissions import AuthenticatedOwnerPermission, IsProvider
 from rest_framework import status
 
-
 class OfferViewSet(viewsets.ModelViewSet):
+    """
+    API-ViewSet für Angebote.
+    
+    - Unterstützt das Erstellen, Aktualisieren, Abrufen und Löschen von Angeboten.
+    - Verwendet verschiedene Serializer je nach Aktion.
+    - Implementiert Filter-, Such- und Paginierungsfunktionen.
+    - Setzt verschiedene Berechtigungen für unterschiedliche Aktionen um.
+    """
     queryset = Offer.objects.prefetch_related("details").select_related("user").distinct()
     filter_backends = (DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter)
     filterset_class = OfferFilter
     pagination_class = CustomPagination
 
     def get_serializer_class(self):
-        """Wechselt zwischen Serializern basierend auf der Aktion."""
+        """Gibt den passenden Serializer basierend auf der aktuellen Aktion zurück."""
         if self.action in ["retrieve", "update", "partial_update"]:  
             return OfferDetailViewSerializer
         elif self.action == "create":
@@ -26,6 +33,7 @@ class OfferViewSet(viewsets.ModelViewSet):
         return OfferListSerializer
 
     def get_permissions(self):
+        """Setzt Berechtigungen je nach Aktion."""
         if self.action == "create":
             self.permission_classes = [IsProvider]
         elif self.action in ["update", "partial_update", "destroy"]:
@@ -35,34 +43,35 @@ class OfferViewSet(viewsets.ModelViewSet):
         return super().get_permissions()
 
     def perform_create(self, serializer):
+        """Erstellt ein neues Angebot und validiert Angebotsdetails."""
         details_data = self.request.data.get("details", [])
 
         if len(details_data) != 3:
-            raise ValidationError(
-                "Es müssen genau 3 Angebotsdetails angegeben werden.")
+            raise ValidationError("Es müssen genau 3 Angebotsdetails angegeben werden.")
 
         offer_types = {detail["offer_type"] for detail in details_data}
         if offer_types != {"basic", "standard", "premium"}:
-            raise ValidationError(
-                "Die Angebotsdetails müssen die Typen basic, standard und premium enthalten.")
+            raise ValidationError("Die Angebotsdetails müssen die Typen basic, standard und premium enthalten.")
 
         for detail in details_data:
             if not detail["features"]:
-                raise ValidationError(
-                    "Jedes Angebotsdetail muss mindestens ein Feature enthalten.")
+                raise ValidationError("Jedes Angebotsdetail muss mindestens ein Feature enthalten.")
             if int(detail["delivery_time_in_days"]) <= 0:
-                raise ValidationError(
-                    "Die Lieferzeit muss eine positive Zahl sein.")
+                raise ValidationError("Die Lieferzeit muss eine positive Zahl sein.")
             if int(detail["revisions"]) < -1:
-                raise ValidationError(
-                    "Die Anzahl der Revisionen darf nicht kleiner als -1 sein (für unlimitierte Revisionen).")
+                raise ValidationError("Die Anzahl der Revisionen darf nicht kleiner als -1 sein (für unlimitierte Revisionen).")
 
         offer = serializer.save(user=self.request.user)
         offer_serializer = OfferDetailViewSerializer(offer)
         return Response(offer_serializer.data)
 
-
 class OfferDetailViewSet(viewsets.ModelViewSet):
+    """
+    API-ViewSet für Angebotsdetails.
+    
+    - Unterstützt das Abrufen, Aktualisieren und Löschen von Angebotsdetails.
+    - Verwendet spezielle Berechtigungen, um den Zugriff zu steuern.
+    """
     queryset = OfferDetail.objects.all()
     serializer_class = OfferDetailSerializer
     permission_classes = [AuthenticatedOwnerPermission |
