@@ -29,7 +29,6 @@ Dieses Repository enthält das Backend des **Coderr Project** – eine Plattform
 1. Repository klonen:
    ```bash
    git clone https://github.com/Rio741/coderr-backend.git
-   cd join-backend
 2. Virtuelle Umgebung erstellen und aktivieren:
    ```bash
    python -m venv venv
